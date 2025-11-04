@@ -1,39 +1,3 @@
--- Player Tools (Pandel) - Final
--- Made by Nasty GBT 😎
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local TeleportService = game:GetService("TeleportService")
-local VirtualUser = game:GetService("VirtualUser")
-local workspace = workspace
-
-local player = Players.LocalPlayer
-
--- STATE
-local state = {
-    gui = nil,
-    frame = nil,
-    openBtn = nil,
-    places = {},
-    noclip = false,
-    infJump = false,
-    instant = false,
-    antiAfk = false,
-    esp = false,
-    fps = false,
-    espObjects = {},
-    fpsConn = nil,
-    afkConn = nil,
-    instantConn = nil,
-}
-
--- Utility
-local function new(class, parent, props)
-    local o = Instance.new(class)
-    if parent then o.Parent = parent end
-    if props then
-        for k,v in pairs(props) do
             if k == "Parent" then o.Parent = v
             else pcall(function() o[k] = v end) end
         end
