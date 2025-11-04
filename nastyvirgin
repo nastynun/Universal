@@ -1,0 +1,245 @@
+--========================================================--
+--  Player Tools GUI - Made by NastyNun 
+--========================================================--
+
+--// SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualUser = game:GetService("VirtualUser")
+local TeleportService = game:GetService("TeleportService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
+--// TELEPORT SAVE SLOTS
+local savedPositions = {nil, nil, nil}
+
+--// CLEAR OLD GUI
+pcall(function()
+	if game.CoreGui:FindFirstChild("PandelGUI") then
+		game.CoreGui.PandelGUI:Destroy()
+	end
+end)
+
+--========================================================--
+--  GUI OBJECTS
+--========================================================--
+local gui = Instance.new("ScreenGui")
+gui.Parent = game.CoreGui
+gui.Name = "PandelGUI"
+gui.ResetOnSpawn = false
+
+-- BLUE MENU BUTTON (DRAGGABLE)
+local menuBtn = Instance.new("TextButton")
+menuBtn.Parent = gui
+menuBtn.Size = UDim2.new(0, 60, 0, 60)
+menuBtn.Position = UDim2.new(0.05, 0, 0.4, 0)
+menuBtn.BackgroundColor3 = Color3.fromRGB(0, 153, 255)
+menuBtn.Text = "Menu"
+menuBtn.TextScaled = true
+menuBtn.TextColor3 = Color3.fromRGB(255,255,255)
+menuBtn.BorderSizePixel = 0
+menuBtn.BackgroundTransparency = .1
+menuBtn.ZIndex = 10
+menuBtn.Draggable = true
+
+-- MAIN FRAME
+local frame = Instance.new("Frame")
+frame.Parent = gui
+frame.Size = UDim2.new(0, 300, 0, 380)
+frame.Position = UDim2.new(.5, -150, .5, -190)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.BackgroundTransparency = .4
+frame.Visible = false
+
+-- TITLE BAR
+local title = Instance.new("TextLabel")
+title.Parent = frame
+title.Size = UDim2.new(1, 0, 0, 35)
+title.BackgroundColor3 = Color3.fromRGB(0,120,255)
+title.Text = "Pandel"
+title.TextScaled = true
+title.TextColor3 = Color3.fromRGB(255,255,255)
+
+-- MINIMIZE BUTTON
+local minimize = Instance.new("TextButton")
+minimize.Parent = frame
+minimize.Size = UDim2.new(0, 40, 0, 35)
+minimize.Position = UDim2.new(0.72, 0, 0, 0)
+minimize.BackgroundColor3 = Color3.fromRGB(0,90,200)
+minimize.Text = "-"
+minimize.TextScaled = true
+
+-- CLOSE BUTTON
+local close = Instance.new("TextButton")
+close.Parent = frame
+close.Size = UDim2.new(0, 40, 0, 35)
+close.Position = UDim2.new(.85,0,0,0)
+close.BackgroundColor3 = Color3.fromRGB(255,0,0)
+close.Text = "X"
+close.TextScaled = true
+
+-- MADE BY LABEL
+local footer = Instance.new("TextLabel")
+footer.Parent = frame
+footer.Size = UDim2.new(1,0,0,20)
+footer.Position = UDim2.new(0,0,1,-20)
+footer.BackgroundTransparency = 1
+footer.Text = "Made by NastyNun"
+footer.TextScaled = true
+footer.TextColor3 = Color3.fromRGB(200,200,200)
+
+-- BUTTON GENERATOR
+local function makeButton(text, callback)
+	local btn = Instance.new("TextButton")
+	btn.Parent = frame
+	btn.Size = UDim2.new(1, -20, 0, 28)
+	btn.Position = UDim2.new(.03, 0, (#frame:GetChildren()-3)*0.07, 0)
+	btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+	btn.Text = text
+	btn.TextScaled = true
+	btn.TextColor3 = Color3.fromRGB(255,255,255)
+	btn.MouseButton1Click:Connect(callback)
+end
+
+--========================================================--
+--  FUNCTIONS
+--========================================================--
+
+-- WALKSPEED
+makeButton("Walkspeed 25 / 50 / 100", function()
+	LocalPlayer.Character.Humanoid.WalkSpeed = ({
+		[25]=50,[50]=100,[100]=25
+	})[LocalPlayer.Character.Humanoid.WalkSpeed] or 25
+end)
+
+-- NOCLIP
+local noclip = false
+makeButton("Noclip (Toggle)", function()
+	noclip = not noclip
+end)
+RunService.Stepped:Connect(function()
+	if noclip and LocalPlayer.Character then
+		for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+			if part:IsA("BasePart") then part.CanCollide = false end
+		end
+	end
+end)
+
+-- INFINITE JUMP
+local infJump = false
+makeButton("Infinite Jump", function()
+	infJump = not infJump
+end)
+UserInputService.JumpRequest:Connect(function()
+	if infJump and LocalPlayer.Character then
+		LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+	end
+end)
+
+-- INSTANT PROXIMITY
+makeButton("Instant Prompt", function()
+	for _, v in pairs(workspace:GetDescendants()) do
+		if v:IsA("ProximityPrompt") then
+			v.HoldDuration = 0
+		end
+	end
+end)
+
+-- ANTI-AFK
+makeButton("Anti AFK", function()
+	LocalPlayer.Idled:connect(function()
+		VirtualUser:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+		task.wait(1)
+		VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+	end)
+end)
+
+-- TELEPORT SAVE/LOAD
+for i = 1,3 do
+	makeButton("Save Place "..i, function()
+		if LocalPlayer.Character then
+			savedPositions[i] = LocalPlayer.Character.HumanoidRootPart.Position
+		end
+	end)
+
+	makeButton("Place "..i, function()
+		if LocalPlayer.Character and savedPositions[i] then
+			LocalPlayer.Character.HumanoidRootPart.CFrame =
+				CFrame.new(savedPositions[i])
+		end
+	end)
+end
+
+-- ESP PLAYER NAMES (distance color)
+local espActive = false
+makeButton("ESP (Player Names)", function()
+	espActive = not espActive
+
+	for _,plr in pairs(Players:GetPlayers()) do
+		if plr.Character and plr.Character:FindFirstChild("Head") then
+			if not plr.Character.Head:FindFirstChild("ESP") then
+				local bill = Instance.new("BillboardGui", plr.Character.Head)
+				bill.Name="ESP"
+				bill.Size = UDim2.new(0,100,0,20)
+				bill.AlwaysOnTop = true
+				local txt = Instance.new("TextLabel", bill)
+				txt.Size = UDim2.new(1,0,1,0)
+				txt.TextScaled = true
+				txt.BackgroundTransparency = 1
+				txt.TextColor3 = Color3.new(1,1,1)
+				txt.Text = plr.Name
+			end
+		end
+	end
+
+	if not espActive then
+		for _,plr in pairs(Players:GetPlayers()) do
+			if plr.Character and plr.Character:FindFirstChild("Head") then
+				if plr.Character.Head:FindFirstChild("ESP") then plr.Character.Head.ESP:Destroy() end
+			end
+		end
+	end
+end)
+
+-- FPS COUNTER
+local fpsActive = false
+local fpsUI = Instance.new("TextLabel", gui)
+fpsUI.Visible = false
+fpsUI.Position = UDim2.new(0, 10, 0, 5)
+fpsUI.TextScaled = true
+fpsUI.Size = UDim2.new(0,100,0,30)
+fpsUI.TextColor3 = Color3.fromRGB(255,255,255)
+fpsUI.BackgroundTransparency = 1
+
+makeButton("FPS Toggle", function()
+	fpsActive = not fpsActive
+	fpsUI.Visible = fpsActive
+end)
+RunService.RenderStepped:Connect(function(dt)
+	if fpsActive then
+		fpsUI.Text = "FPS: "..math.floor(1/dt)
+	end
+end)
+
+-- REJOIN
+makeButton("Rejoin", function()
+	TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+end)
+
+-- SERVERHOP
+makeButton("Serverhop", function()
+	TeleportService:Teleport(game.PlaceId)
+end)
+
+-- SHOW / HIDE LOGIC
+menuBtn.MouseButton1Click:Connect(function()
+	frame.Visible = not frame.Visible
+end)
+close.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
+minimize.MouseButton1Click:Connect(function()
+	frame.Visible = false
+end)
+
+print("✅ Loaded: Player Tools GUI — Made by NastyNun")
