@@ -1,5 +1,5 @@
 -- Player Tools (Pandel) - Final
--- Made by Nasty GBT 😎
+-- Made by NastyNun
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -437,4 +437,4 @@ end
 buildGui()
 
 -- Quick loader helpful message in console (pcall wrapper advisable when executing)
-print("Pandel loaded. Press the blue Menu button to open. Made by Nasty GBT 😎")
+print("Pandel loaded. Press the blue Menu button to open. Made by NastyNun")
